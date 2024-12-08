@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-ms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentication-ms
+  template:
+    metadata:
+      labels:
+        app: authentication-ms
+    spec:
+      containers:
+        - name: authentication-ms
+          image: your-docker-registry/authentication-ms:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: authentication-env
