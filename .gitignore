@@ -1,7 +1,11 @@
 # compiled output
 /dist
-/node_modules
 /build
+
+# Ignore all node_modules
+node_modules/
+services/*/node_modules/
+
 
 # Logs
 logs
@@ -52,5 +56,5 @@ pids
 *.seed
 *.pid.lock
 
-# Diagnostic reports (https://nodejs.org/api/report.html)
+# Diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
