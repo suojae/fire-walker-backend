@@ -1,0 +1,21 @@
+{
+  "name": "step-tracker-ms",
+  "version": "1.0.0",
+  "main": "dist/main.js",
+  "scripts": {
+    "start": "nest start --microservice --config=dist/main.js"
+  },
+  "dependencies": {
+    "@nestjs/common": "^9.0.0",
+    "@nestjs/core": "^9.0.0",
+    "@nestjs/microservices": "^9.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.5.0",
+    "grpc": "^1.24.11",
+    "@grpc/proto-loader": "^0.6.0"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^9.0.0",
+    "typescript": "^4.9.4"
+  }
+}

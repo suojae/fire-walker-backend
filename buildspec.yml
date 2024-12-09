@@ -10,7 +10,7 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image for authentication-ms...
-      - docker build -t authentication-ms .
+      - docker build -f services/authentication-ms/Dockerfile -t authentication-ms services/authentication-ms
       - docker tag authentication-ms:latest 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/authentication-ms:latest
   post_build:
     commands:

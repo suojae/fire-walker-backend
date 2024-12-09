@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: step-tracker-ms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: step-tracker-ms
+  template:
+    metadata:
+      labels:
+        app: step-tracker-ms
+    spec:
+      containers:
+        - name: step-tracker-ms
+          image: your-docker-registry/step-tracker-ms:latest
+          ports:
+            - containerPort: 50051
+          envFrom:
+            - secretRef:
+                name: step-tracker-env
