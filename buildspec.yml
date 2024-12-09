@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image for authentication-ms...
+      - docker build -t authentication-ms .
+      - docker tag authentication-ms:latest 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/authentication-ms:latest
+  post_build:
+    commands:
+      - echo Pushing the Docker image to ECR...
+      - docker push 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/authentication-ms:latest
+      - echo Build and push completed on `date`
+
+artifacts:
+  files:
+    - "**/*"
