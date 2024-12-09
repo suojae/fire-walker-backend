@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-ms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-ms
+  template:
+    metadata:
+      labels:
+        app: user-ms
+    spec:
+      containers:
+        - name: user-ms
+          image: your-docker-registry/user-ms:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: user-env
