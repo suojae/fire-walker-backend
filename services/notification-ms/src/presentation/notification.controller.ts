@@ -4,6 +4,7 @@ import { FriendRequestDto } from './dto/friend-request.dto';
 import { FriendRequestResponseDto } from './dto/friend-request-response.dto';
 import { FriendAcceptResponseDto } from './dto/friend-accept-response.dto';
 import { FriendAcceptDto } from './dto/friend-accept.dto';
+import { NotificationService } from '../domain/notification.service';
 
 @ApiTags('Notification')
 @Controller('notifications')
