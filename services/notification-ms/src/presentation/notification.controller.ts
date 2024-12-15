@@ -1,7 +1,11 @@
-// src/interfaces/notification.controller.ts
 import { Controller, Post, Body, Logger } from '@nestjs/common';
-import { NotificationService } from '../domain/notification.service';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { FriendRequestDto } from './dto/friend-request.dto';
+import { FriendRequestResponseDto } from './dto/friend-request-response.dto';
+import { FriendAcceptResponseDto } from './dto/friend-accept-response.dto';
+import { FriendAcceptDto } from './dto/friend-accept.dto';
 
+@ApiTags('Notification')
 @Controller('notifications')
 export class NotificationController {
   private readonly logger = new Logger(NotificationController.name);
@@ -13,27 +17,30 @@ export class NotificationController {
   /**
    * 친구 요청 알림 전송
    */
+  @ApiOperation({ summary: '친구 요청 알림 전송 API' })
+  @ApiResponse({ status: 201, description: '성공', type: FriendRequestResponseDto })
   @Post('friend-request')
-  async sendFriendRequestNotification(@Body() dto: { recipientUuid: string; senderNickname: string }) {
-    // TODO: 로직 추후구현
+  async sendFriendRequestNotification(
+    @Body() dto: FriendRequestDto,
+  ): Promise<FriendRequestResponseDto> {
+    this.logger.log(`Received friend request notification for recipient: ${dto.recipientUuid}`);
+    await this.notificationService.sendFriendRequestNotification(dto.recipientUuid, dto.senderNickname);
+
     return { message: 'Friend request notification sent.' };
   }
 
   /**
    * 친구 요청 수락 알림 전송
    */
+  @ApiOperation({ summary: '친구 요청 수락 알림 전송 API' })
+  @ApiResponse({ status: 201, description: '성공', type: FriendAcceptResponseDto })
   @Post('friend-accept')
-  async sendFriendAcceptNotification(@Body() dto: { requesterUuid: string; recipientNickname: string }) {
-    // TODO: 로
-    return { message: 'Friend accept notification sent.' };
-  }
+  async sendFriendAcceptNotification(
+    @Body() dto: FriendAcceptDto,
+  ): Promise<FriendAcceptResponseDto> {
+    this.logger.log(`Received friend accept notification for requester: ${dto.requesterUuid}`);
+    await this.notificationService.sendFriendAcceptNotification(dto.requesterUuid, dto.recipientNickname);
 
-  /**
-   * 실시간 랭킹 갱신 알림 전송 (선택적으로 구현)
-   */
-  @Post('ranking-update')
-  async sendRankingUpdateNotification(@Body() dto: { userUuids: string[]; rankingData: any }) {
-    // TODO:
-    return { message: 'Ranking update notification sent.' };
+    return { message: 'Friend accept notification sent.' };
   }
 }
