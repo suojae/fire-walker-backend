@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import * as admin from 'firebase-admin';
 import { AxiosError } from 'axios';
 
-const serviceAccount = require('../../../serviceAccountKey.json');
+var serviceAccount = require("../../serviceAccountKey.json");
 
 @Injectable()
 export class FcmGateway {
