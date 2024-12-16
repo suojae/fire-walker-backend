@@ -1,4 +1,15 @@
+import { plainToInstance } from 'class-transformer';
+
 export type Provider = 'kakao' | 'apple';
+
+export interface UserEntityProps {
+  uuid: string;
+  socialId: string;
+  provider: Provider;
+  nickName: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export class UserEntity {
   private readonly uuid: string; // 유저 고유 식별자
@@ -8,21 +19,19 @@ export class UserEntity {
   private createdAt: Date; // 생성 시간
   private updatedAt: Date; // 수정 시간
 
-  constructor(
-    uuid: string,
-    socialId: string,
-    provider: Provider,
-    nickName: string,
-    createdAt?: Date,
-    updatedAt?: Date,
-  ) {
-    this.uuid = uuid;
-    this.socialId = socialId;
-    this.provider = provider;
-    this.nickName = nickName;
-    this.createdAt = createdAt || new Date(); // 기본값: 현재 시간
-    this.updatedAt = updatedAt || new Date(); // 기본값: 현재 시간
+  constructor(props: UserEntityProps) {
+    this.uuid = props.uuid;
+    this.socialId = props.socialId;
+    this.provider = props.provider;
+    this.nickName = props.nickName;
+    this.createdAt = props.createdAt || new Date();
+    this.updatedAt = props.updatedAt || new Date();
   }
+
+  static create(data: Partial<UserEntity>): UserEntity {
+    return plainToInstance(UserEntity, data);
+  }
+
 
   // Getter for UUID
   public getUuid(): string {
@@ -69,7 +78,7 @@ export class UserEntity {
     this.updatedAt = new Date();
   }
 
-  // 도메인 비즈니스 로직 예시: 프로필 업데이트
+  // 프로필 업데이트
   public updateProfile(nickName: string): this {
     return this.setNickName(nickName);
   }
