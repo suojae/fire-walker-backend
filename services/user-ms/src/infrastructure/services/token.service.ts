@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { sign } from 'jsonwebtoken';
+import { sign, verify } from 'jsonwebtoken';
 import { JwtPayload } from './jwt-payload.interface';
 
 @Injectable()
@@ -17,5 +17,10 @@ export class TokenService {
     return sign(payload, this.JWT_SECRET, {
       expiresIn: '14d',
     });
+  }
+
+  verifyToken(token: string): JwtPayload {
+    const decoded = verify(token, this.JWT_SECRET);
+    return decoded as JwtPayload;
   }
 }
