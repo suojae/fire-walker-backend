@@ -1,5 +1,11 @@
 version: 0.2
 
+env:
+  variables:
+    AWS_REGION: "ap-northeast-2"
+    ECR_REGISTRY: "954976330162.dkr.ecr.ap-northeast-2.amazonaws.com"
+    ECR_REPOSITORY: "fire-walker/user-ms"
+
 phases:
   install:
     runtime-versions:
@@ -9,40 +15,19 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - aws --version
-      - aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
   build:
     commands:
       - echo Build started on `date`
-
-      # Build and tag for authentication-ms
-      - echo Building the Docker image for authentication-ms...
-      - docker build -f services/authentication-ms/Dockerfile -t authentication-ms services/authentication-ms
-      - docker tag authentication-ms:latest 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/authentication-ms:latest
-
-      # Build and tag for user-ms
       - echo Building the Docker image for user-ms...
       - docker build -f services/user-ms/Dockerfile -t user-ms services/user-ms
-      - docker tag user-ms:latest 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/user-ms:latest
-
-      # Build and tag for step-tracker-ms
-      - echo Building the Docker image for step-tracker-ms...
-      - docker build -f services/step-tracker-ms/Dockerfile -t step-tracker-ms services/step-tracker-ms
-      - docker tag step-tracker-ms:latest 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/step-tracker-ms:latest
+      - docker tag user-ms:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
   post_build:
     commands:
-      - echo Pushing the Docker images to ECR...
-
-      # Push for authentication-ms
-      - docker push 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/authentication-ms:latest
-
-      # Push for user-ms
-      - docker push 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/user-ms:latest
-
-      # Push for step-tracker-ms
-      - docker push 954976330162.dkr.ecr.ap-northeast-2.amazonaws.com/fire-walker/step-tracker-ms:latest
-
+      - echo Pushing the Docker image to ECR...
+      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
       - echo Build and push completed on `date`
 
 artifacts:
