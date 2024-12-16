@@ -3,11 +3,11 @@ import { UserOrmEntity } from '../dao/user.orm-entity';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'mysql',
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306', 10),
-  username: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || '',
-  database: process.env.DB_NAME || 'testdb',
+  host: process.env.MYSQL_HOST || 'localhost',
+  port: parseInt(process.env.MYSQL_PORT || '3306', 10),
+  username: process.env.MYSQL_USER || 'MYSQL_USER',
+  password: process.env.MYSQL_PASSWORD || '12345',
+  database: process.env.MYSQL_DATABASE || 'testdb',
   entities: [UserOrmEntity],
-  synchronize: true, // 개발 환경에서만 true, 운영 환경에서는 false
+  synchronize: true,
 };
