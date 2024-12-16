@@ -12,37 +12,65 @@ import { SignInResponseDto } from './dto/sign-in-response.dto';
 @ApiTags('auth')
 @Controller('auth')
 export class UserController {
-  constructor(private readonly userService: UserUsecase) {
-  }
+  constructor(private readonly userService: UserUsecase) {}
 
   @Post('signup')
-  @ApiResponse({ status: 201, description: '성공', type: SignUpResponseDto })
   @ApiOperation({ summary: '회원가입' })
+  @ApiResponse({
+    status: 201,
+    description: '성공',
+    headers: {
+      Authorization: {
+        description: 'Access Token',
+        schema: { type: 'string' },
+      },
+      'X-Refresh-Token': {
+        description: 'Refresh Token',
+        schema: { type: 'string' },
+      },
+    },
+    type: SignUpResponseDto,
+  })
   async signUpWithKakao(
     @Body() signUpRequestDto: SignUpRequestDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<SignUpResponseDto> {
     const tokenEntity = await this.userService.signUpWithKakao(signUpRequestDto.authCode);
+
     // 1) Access Token을 헤더로 내려주기
     res.setHeader('Authorization', `Bearer ${tokenEntity.getAccessToken()}`);
 
     // 2) Refresh Token도 헤더로 내려주기 (커스텀 헤더)
     res.setHeader('X-Refresh-Token', tokenEntity.getRefreshToken());
+
     return {
       message: 'Signup 성공!',
     };
   }
 
   @Post('signin')
-  @ApiResponse({ status: 201, description: '성공', type: SignInResponseDto })
   @ApiOperation({ summary: '이미 발급된 Access Token 인증' })
+  @ApiResponse({
+    status: 201,
+    description: '성공',
+    headers: {
+      Authorization: {
+        description: 'Access Token',
+        schema: { type: 'string' },
+      },
+      'X-Refresh-Token': {
+        description: 'Refresh Token',
+        schema: { type: 'string' },
+      },
+    },
+    type: SignInResponseDto,
+  })
   async signIn(
     @Body() signInRequestDto: SignInRequestDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<SignInResponseDto> {
     const tokenEntity = await this.userService.verifyAccessToken(signInRequestDto.accessToken);
 
-    // 새 Access Token, Refresh Token이 필요하다면 헤더나 쿠키로 내려준다
     res.setHeader('Authorization', `Bearer ${tokenEntity.getAccessToken()}`);
     res.setHeader('X-Refresh-Token', tokenEntity.getRefreshToken());
 
@@ -51,14 +79,27 @@ export class UserController {
 
   @Post('refresh')
   @ApiOperation({ summary: '토큰 재발급 (RTR)' })
-  @ApiResponse({ status: 201, description: '성공', type: RefreshResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: '성공',
+    headers: {
+      Authorization: {
+        description: 'Access Token',
+        schema: { type: 'string' },
+      },
+      'X-Refresh-Token': {
+        description: 'Refresh Token',
+        schema: { type: 'string' },
+      },
+    },
+    type: RefreshResponseDto,
+  })
   async refresh(
     @Body() dto: RefreshRequestDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<RefreshResponseDto> {
     const newTokens = await this.userService.refreshTokens(dto.refreshToken);
 
-    // 새로 발급된 토큰도 헤더에 담아서 내려주기
     res.setHeader('Authorization', `Bearer ${newTokens.getAccessToken()}`);
     res.setHeader('X-Refresh-Token', newTokens.getRefreshToken());
 
