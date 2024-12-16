@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # 빌드 확인: dist 디렉토리 생성
-RUN npm run build && ls dist
+RUN npm run build
 
 # 포트 노출
 EXPOSE 3000

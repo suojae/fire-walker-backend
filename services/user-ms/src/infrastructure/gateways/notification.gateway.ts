@@ -72,7 +72,7 @@ export class NotificationGateway {
       return response.data;
     } catch (error) {
       this.logger.error(
-        `Failed to send friend accept notification: ${error.message}`,
+        `Failed to send friend accept notification: ${error}`,
       );
       throw error;
     }
