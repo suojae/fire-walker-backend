@@ -66,6 +66,21 @@ export class UserUsecase {
     });
   }
 
+  async updateUserNickname(
+    userId: string,
+    newNickname: string,
+  ): Promise<UserEntity> {
+    // 1) DB에서 해당 유저 조회
+    const userEntity = await this.userRepository.findUserByUuid(userId);
+    if (!userEntity) {
+      throw new NotFoundException(`User not found: ${userId}`);
     }
+
+    // 2) 닉네임 변경 (도메인 엔티티 메서드)
+    userEntity.setNickName(newNickname);
+
+    // 3) 변경된 엔티티를 DB에 저장
+    await this.userRepository.saveUser(userEntity);
+    return userEntity;
   }
 }
