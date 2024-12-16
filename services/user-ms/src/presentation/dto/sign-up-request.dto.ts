@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class AuthResponseDto {
+export class SignUpRequestDto {
   @ApiProperty({
     example: '123e4567-e89b-12d3-a456-426614174000',
     description: '유저 고유 ID(UUID)',
