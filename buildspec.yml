@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "us-east-1" # Public ECR은 us-east-1 리전 사용
-    ECR_REGISTRY: "public.ecr.aws/fire-walker" # '<alias>'에 본인의 Public ECR alias를 입력
+    ECR_REGISTRY: "public.ecr.aws/fiew-walker" # '<alias>'에 본인의 Public ECR alias를 입력
     ECR_REPOSITORY: "fire-walker/user-ms"
 
 phases:
