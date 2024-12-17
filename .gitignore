@@ -6,6 +6,11 @@
 node_modules/
 services/*/node_modules/
 
+dist/
+
+# MySQL 데이터 폴더
+mysql_data/
+redis_data/
 
 # Logs
 logs
