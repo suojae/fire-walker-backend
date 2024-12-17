@@ -2,8 +2,8 @@ version: 0.2
 
 env:
   variables:
-    AWS_REGION: "ap-northeast-2"
-    ECR_REGISTRY: "954976330162.dkr.ecr.ap-northeast-2.amazonaws.com"
+    AWS_REGION: "us-east-1" # Public ECR은 us-east-1 리전 사용
+    ECR_REGISTRY: "public.ecr.aws/fire-walker" # '<alias>'에 본인의 Public ECR alias를 입력
     ECR_REPOSITORY: "fire-walker/user-ms"
 
 phases:
@@ -13,13 +13,12 @@ phases:
 
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
+      - echo Logging in to Amazon Public ECR...
       - aws --version
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+      - aws ecr-public get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
   build:
     commands:
-      - echo Build started on `date`
       - echo Building the Docker image for user-ms...
       - docker build -f services/user-ms/Dockerfile -t user-ms services/user-ms
       - docker tag user-ms:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
