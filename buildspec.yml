@@ -1,34 +1,34 @@
-#version: 0.2
-#
-#env:
-#  variables:
-#    AWS_REGION: "us-east-1" # Public ECR은 us-east-1 리전 사용
-#    ECR_REGISTRY: "public.ecr.aws/fiew-walker" # '<alias>'에 본인의 Public ECR alias를 입력
-#    ECR_REPOSITORY: "fire-walker/user-ms"
-#
-#phases:
-#  install:
-#    runtime-versions:
-#      nodejs: 18
-#
-#  pre_build:
-#    commands:
-#      - echo Logging in to Amazon Public ECR...
-#      - aws --version
-#      - aws ecr-public get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-#
-#  build:
-#    commands:
-#      - echo Building the Docker image for user-ms...
-#      - docker build -f services/user-ms/Dockerfile -t user-ms services/user-ms
-#      - docker tag user-ms:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
-#
-#  post_build:
-#    commands:
-#      - echo Pushing the Docker image to ECR...
-#      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-#      - echo Build and push completed on `date`
-#
-#artifacts:
-#  files:
-#    - "**/*"
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "us-east-1" # Public ECR은 us-east-1 리전 사용
+    ECR_REGISTRY: "public.ecr.aws/n1o1g8m7" # 본인의 Public ECR alias
+    ECR_REPOSITORY: "fire-walker/step-tracker-ms" # Step Tracker의 ECR Repository 이름
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon Public ECR...
+      - aws --version
+      - aws ecr-public get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+  build:
+    commands:
+      - echo Building the Docker image for step-tracker-ms...
+      - docker build -f services/step-tracker-ms/Dockerfile -t step-tracker-ms services/step-tracker-ms
+      - docker tag step-tracker-ms:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+  post_build:
+    commands:
+      - echo Pushing the Docker image to ECR...
+      - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+      - echo Build and push completed on `date`
+
+artifacts:
+  files:
+    - "**/*"
