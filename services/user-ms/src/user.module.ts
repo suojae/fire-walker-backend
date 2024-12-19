@@ -17,7 +17,10 @@ import { UserRepository } from './infrastructure/repositories/user.repository';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true}),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `${__dirname}/../.env`,
+    }),
     TypeOrmModule.forRoot(typeOrmConfig),
     TypeOrmModule.forFeature([UserOrmEntity]),
   ],
