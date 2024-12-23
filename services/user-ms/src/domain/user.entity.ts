@@ -1,29 +1,27 @@
 import { plainToInstance } from 'class-transformer';
 
-export type Provider = 'kakao' | 'apple';
-
 export interface UserEntityProps {
   uuid: string;
   socialId: string;
-  provider: Provider;
   nickName: string;
+  fcmToken?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export class UserEntity {
-  private readonly uuid: string; // 유저 고유 식별자
-  private readonly socialId: string; // 소셜 로그인 ID
-  private readonly provider: Provider; // 소셜 로그인 제공자
-  private nickName: string; // 닉네임
-  private createdAt: Date; // 생성 시간
-  private updatedAt: Date; // 수정 시간
+  private readonly uuid: string;
+  private readonly socialId: string;
+  private nickName: string;
+  private fcmToken?: string;
+  private createdAt: Date;
+  private updatedAt: Date;
 
   constructor(props: UserEntityProps) {
     this.uuid = props.uuid;
     this.socialId = props.socialId;
-    this.provider = props.provider;
     this.nickName = props.nickName;
+    this.fcmToken = props.fcmToken;
     this.createdAt = props.createdAt || new Date();
     this.updatedAt = props.updatedAt || new Date();
   }
@@ -32,54 +30,53 @@ export class UserEntity {
     return plainToInstance(UserEntity, data);
   }
 
-
-  // Getter for UUID
-  public getUuid(): string {
+  // Getter / Setter
+  getUuid(): string {
     return this.uuid;
   }
 
-  // Getter for Social ID
-  public getSocialId(): string {
+  getSocialId(): string {
     return this.socialId;
   }
 
-  // Getter for Provider
-  public getProvider(): Provider {
-    return this.provider;
-  }
-
-  // Getter for NickName
-  public getNickName(): string {
+  getNickName(): string {
     return this.nickName;
   }
 
-  // Getter for Created At
-  public getCreatedAt(): Date {
+  getFcmToken(): string {
+    return <string>this.fcmToken;
+  }
+
+  getCreatedAt(): Date {
     return this.createdAt;
   }
 
-  // Getter for Updated At
-  public getUpdatedAt(): Date {
+  getUpdatedAt(): Date {
     return this.updatedAt;
   }
 
-  // Setter for NickName
-  public setNickName(nickName: string): this {
+  setNickName(nickName: string): this {
     if (!nickName || nickName.trim().length < 3) {
-      throw new Error('닉네임은 최소 3글자 이상.');
+      throw new Error('닉네임은 최소 3글자 이상이여야 합니다.');
     }
     this.nickName = nickName.trim();
     this.updateTimestamp();
     return this;
   }
 
-  // Update timestamps
-  private updateTimestamp(): void {
-    this.updatedAt = new Date();
+  /**
+   * FCM 토큰 업데이트
+   */
+  setFcmToken(fcmToken: string): this {
+    if (!fcmToken || fcmToken.trim().length === 0) {
+      throw new Error('유효하지 않은 FCM 토큰입니다.');
+    }
+    this.fcmToken = fcmToken.trim();
+    this.updateTimestamp();
+    return this;
   }
 
-  // 프로필 업데이트
-  public updateProfile(nickName: string): this {
-    return this.setNickName(nickName);
+  private updateTimestamp(): void {
+    this.updatedAt = new Date();
   }
 }
