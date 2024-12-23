@@ -9,9 +9,6 @@ export class UserOrmEntity {
   socialId: string;
 
   @Column({ length: 50 })
-  provider: string;
-
-  @Column({ length: 50 })
   nickName: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
