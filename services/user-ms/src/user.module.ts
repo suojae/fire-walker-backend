@@ -15,21 +15,29 @@ import { FriendshipRepository } from './infrastructure/repositories/friendship.r
 import { FriendshipDao } from './infrastructure/repositories/dao/friendship.dao';
 import { HttpModule } from '@nestjs/axios';
 import { FriendshipOrmEntity } from './infrastructure/repositories/dao/friendship.orm-entity';
+import { AwsParameterStoreService } from './infrastructure/repositories/configs/aws-parameter-store.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../.env',
     }),
 
-    TypeOrmModule.forRoot(typeOrmConfig),
-    TypeOrmModule.forFeature([UserOrmEntity, FriendshipOrmEntity]),
-    HttpModule,
+    // TypeORM 비동기 설정
+    TypeOrmModule.forRootAsync({
+      inject: [AwsParameterStoreService],
+      useFactory: async (awsService: AwsParameterStoreService) =>
+        await typeOrmConfig(awsService),
+    }),
 
+    // TypeORM 엔티티 등록
+    TypeOrmModule.forFeature([UserOrmEntity, FriendshipOrmEntity]),
+
+    HttpModule,
   ],
   controllers: [UserController],
   providers: [
+    AwsParameterStoreService,
     RedisConfig,
     UserDao,
     RefreshTokenDao,
@@ -40,6 +48,11 @@ import { FriendshipOrmEntity } from './infrastructure/repositories/dao/friendshi
     FriendshipDao,
     FriendshipRepository,
   ],
-  exports: [UserUsecase,FriendshipDao, FriendshipRepository],
+  exports: [
+    UserUsecase,
+    FriendshipDao,
+    FriendshipRepository,
+    AwsParameterStoreService,
+  ],
 })
 export class UserModule {}
