@@ -3,42 +3,58 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthGateway } from '../infrastructure/gateways/auth.gateway';
-import { TokenEntity } from './token.entity';
+import { NotificationGateway } from '../infrastructure/gateways/notification.gateway';
 import { TokenService } from '../infrastructure/services/token.service';
 import { JwtPayload } from 'jsonwebtoken';
-import { UserEntity } from './user.entity';
 import { UserRepository } from '../infrastructure/repositories/user.repository';
+import { FriendshipRepository } from '../infrastructure/repositories/friendship.repository';
+import { TokenEntity } from './token.entity';
+import { UserEntity } from './user.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UserUsecase {
   constructor(
-    private readonly authGateway: AuthGateway,
+    private readonly notificationGateway: NotificationGateway,
     private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
+    private readonly friendshipRepository: FriendshipRepository,
   ) {}
 
-  async signUpWithKakao(authcode: string): Promise<TokenEntity> {
-    const result = await this.authGateway.signUpWithKakao(authcode);
+  // ----------------------------------------------------------------
+  // [카카오 + 애플] 회원가입
+  // ----------------------------------------------------------------
+  async signUp(socialId: string): Promise<TokenEntity> {
+    const userUuid = uuidv4();
 
     const user = new UserEntity({
-      uuid: result.userUuid,
-      socialId: result.userSocialId,
-      provider: 'kakao',
-      nickName: 'default', // 첫정회원가입시에는 default로 설
+      uuid: userUuid,
+      socialId: socialId,
+      nickName: '',
     });
 
     await this.userRepository.saveUser(user);
 
+    const accessToken = this.tokenService.generateAccessToken({
+      userUuid,
+    });
+    const refreshToken = this.tokenService.generateRefreshToken({
+      userUuid,
+    });
+
     return new TokenEntity({
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     });
   }
 
-  verifyAccessToken(accessToken: string): JwtPayload {
+  // ----------------------------------------------------------------
+  // [Access Token 검증, Refresh 토큰 재발급]
+  // ----------------------------------------------------------------
+  verifyAccessToken(accessToken: string): TokenEntity {
     try {
-      return this.tokenService.verifyToken(accessToken); // { userUuid, provider, iat, exp }
+      this.tokenService.verifyToken(accessToken) as JwtPayload;
+      return new TokenEntity({ accessToken, refreshToken: '' });
     } catch (error) {
       throw new UnauthorizedException(
         `Invalid or expired access token: ${error}`,
@@ -47,18 +63,15 @@ export class UserUsecase {
   }
 
   async refreshTokens(oldRefreshToken: string): Promise<TokenEntity> {
-    // Redis에서 oldRefreshToken 유효성 검증
     const userId = this.tokenService.verifyToken(oldRefreshToken).userUuid;
     const storedToken = await this.userRepository.getRefreshToken(userId);
     if (!storedToken || storedToken !== oldRefreshToken) {
       throw new Error('Refresh token mismatch or expired');
     }
 
-    // RTR 회전: old Token 폐기 or 덮어쓰기
     const newRefreshToken = 'new-refresh-token';
     await this.userRepository.saveRefreshToken(userId, newRefreshToken);
 
-    // 새 Access Token
     const newAccessToken = 'new-access-token';
     return new TokenEntity({
       accessToken: newAccessToken,
@@ -66,21 +79,151 @@ export class UserUsecase {
     });
   }
 
-  async updateUserNickname(
-    userId: string,
-    newNickname: string,
-  ): Promise<UserEntity> {
-    // 1) DB에서 해당 유저 조회
-    const userEntity = await this.userRepository.findUserByUuid(userId);
-    if (!userEntity) {
-      throw new NotFoundException(`User not found: ${userId}`);
+  // ----------------------------------------------------------------
+  // [카카오 + 애플] 로그아웃
+  // ----------------------------------------------------------------
+  async signout(userId: string): Promise<void> {
+    await this.userRepository.deleteRefreshToken(userId);
+  }
+
+  // ----------------------------------------------------------------
+  // [카카오 + 애플] 회원탈퇴
+  // ----------------------------------------------------------------
+  async deleteAccount(userId: string): Promise<void> {
+    await this.userRepository.deleteUser(userId);
+    await this.userRepository.deleteRefreshToken(userId);
+  }
+
+  // ----------------------------------------------------------------
+  // [유저 정보 업데이트, FCM 토큰]
+  // ----------------------------------------------------------------
+  async updateFcmToken(userUuid: string, fcmToken: string): Promise<void> {
+    const user = await this.userRepository.findUserByUuid(userUuid);
+    if (!user) {
+      throw new NotFoundException(`User not found: ${userUuid}`);
+    }
+    user.setFcmToken(fcmToken);
+    await this.userRepository.saveUser(user);
+  }
+
+  // ----------------------------------------------------------------
+  // [친구 요청/수락, 목록 조회]
+  // ----------------------------------------------------------------
+  async friendRequest(
+    senderNickname: string,
+    friendNickname: string,
+  ): Promise<string> {
+    const friendUser =
+      await this.userRepository.findUserByNickname(friendNickname);
+    if (!friendUser) {
+      throw new NotFoundException(`Friend user not found: ${friendNickname}`);
+    }
+    const senderUser =
+      await this.userRepository.findUserByNickname(senderNickname);
+    if (!senderUser) {
+      throw new NotFoundException(`Sender user not found: ${senderNickname}`);
+    }
+    const existing = await this.friendshipRepository.findFriendship(
+      senderUser.getUuid(),
+      friendUser.getUuid(),
+    );
+    if (existing) {
+      throw new Error('이미 친구 요청이 존재합니다.');
+    }
+    await this.friendshipRepository.createFriendship(
+      senderUser.getUuid(),
+      friendUser.getUuid(),
+    );
+    const tokens = friendUser.getFcmToken() ? [friendUser.getFcmToken()] : [];
+    return this.sendFriendRequestNotification(senderNickname, tokens);
+  }
+
+  async friendAccept(
+    recipientNickname: string,
+    friendNickname: string,
+  ): Promise<string> {
+    const friendUser =
+      await this.userRepository.findUserByNickname(friendNickname);
+    if (!friendUser) {
+      throw new NotFoundException(`Friend user not found: ${friendNickname}`);
+    }
+    const recipientUser =
+      await this.userRepository.findUserByNickname(recipientNickname);
+    if (!recipientUser) {
+      throw new NotFoundException(
+        `Recipient user not found: ${recipientNickname}`,
+      );
+    }
+    const friendship = await this.friendshipRepository.findFriendship(
+      friendUser.getUuid(),
+      recipientUser.getUuid(),
+    );
+    if (!friendship) {
+      throw new NotFoundException('친구 요청이 존재하지 않습니다.');
+    }
+    if (friendship.status !== 'PENDING') {
+      throw new Error(
+        `현재 상태가 PENDING이 아니라서 수락할 수 없습니다. (status=${friendship.status})`,
+      );
+    }
+    await this.friendshipRepository.updateStatus(friendship.id, 'ACCEPTED');
+
+    const tokens = friendUser.getFcmToken() ? [friendUser.getFcmToken()] : [];
+    return this.sendFriendAcceptNotification(recipientNickname, tokens);
+  }
+
+  async findMyFriends(userNickname: string): Promise<string[]> {
+    const user = await this.userRepository.findUserByNickname(userNickname);
+    if (!user) {
+      throw new NotFoundException(
+        `User not found by nickname: ${userNickname}`,
+      );
+    }
+    const userUuid = user.getUuid();
+    const rows = await this.friendshipRepository.findAllFriendships(userUuid);
+    const acceptedRows = rows.filter((r) => r.status === 'ACCEPTED');
+    return acceptedRows.map((r) =>
+      r.userUuid === userUuid ? r.friendUuid : r.userUuid,
+    );
+  }
+
+  // ----------------------------------------------------------------
+  // [유저 닉네임 업데이트]
+  // ----------------------------------------------------------------
+  async updateNickname(userUuid: string, newNickname: string): Promise<void> {
+    const user = await this.userRepository.findUserByUuid(userUuid);
+    if (!user) {
+      throw new NotFoundException(`User not found: ${userUuid}`);
     }
 
-    // 2) 닉네임 변경 (도메인 엔티티 메서드)
-    userEntity.setNickName(newNickname);
+    // 닉네임 업데이트
+    await this.userRepository.updateNickname(userUuid, newNickname);
+  }
 
-    // 3) 변경된 엔티티를 DB에 저장
-    await this.userRepository.saveUser(userEntity);
-    return userEntity;
+  // ----------------------------------------------------------------
+  // [Private Helper]
+  // ----------------------------------------------------------------
+  private async sendFriendRequestNotification(
+    senderNickname: string,
+    tokens: string[],
+  ): Promise<string> {
+    const response =
+      await this.notificationGateway.sendFriendRequestNotification({
+        senderNickname,
+        tokens,
+      });
+    return response.message;
+  }
+
+  private async sendFriendAcceptNotification(
+    recipientNickname: string,
+    tokens: string[],
+  ): Promise<string> {
+    const response =
+      await this.notificationGateway.sendFriendAcceptNotification({
+        recipientNickname,
+        tokens,
+      });
+    return response.message;
   }
 }
