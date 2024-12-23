@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
+import { AwsParameterStoreService } from './aws-parameter-store.service';
 
 @Injectable()
 export class RedisConfig {
-  public readonly redisClient: Redis;
+  public redisClient: Redis;
 
-  constructor() {
-    const redisHost = process.env.REDIS_HOST || 'localhost';
-    const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
+  constructor(private readonly awsService: AwsParameterStoreService) {
+    this.initialize();
+  }
+
+  private async initialize() {
+    const redisHost = await this.awsService.getParameter('/userms/redis/host');
+    const redisPort = parseInt(await this.awsService.getParameter('/userms/redis/port'), 10);
 
     this.redisClient = new Redis({
       host: redisHost,

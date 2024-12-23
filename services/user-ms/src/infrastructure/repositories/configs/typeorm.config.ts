@@ -1,13 +1,25 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { AwsParameterStoreService } from './aws-parameter-store.service';
 import { UserOrmEntity } from '../dao/user.orm-entity';
+import { FriendshipOrmEntity } from '../dao/friendship.orm-entity';
 
-export const typeOrmConfig: TypeOrmModuleOptions = {
-  type: 'mysql',
-  host: process.env.MYSQL_HOST || 'localhost',
-  port: parseInt(process.env.MYSQL_PORT || '3306', 10),
-  username: process.env.MYSQL_USER || 'MYSQL_USER',
-  password: process.env.MYSQL_PASSWORD || '12345',
-  database: process.env.MYSQL_DATABASE || 'testdb',
-  entities: [UserOrmEntity],
-  synchronize: true,
+export const typeOrmConfig = async (
+  awsService: AwsParameterStoreService,
+): Promise<TypeOrmModuleOptions> => {
+  const host = await awsService.getParameter('/userms/mysql/host');
+  const port = parseInt(await awsService.getParameter('/userms/mysql/port'), 10);
+  const username = await awsService.getParameter('/userms/mysql/username');
+  const password = await awsService.getParameter('/userms/mysql/password');
+  const database = await awsService.getParameter('/userms/mysql/database');
+
+  return {
+    type: 'mysql',
+    host,
+    port,
+    username,
+    password,
+    database,
+    entities: [UserOrmEntity, FriendshipOrmEntity],
+    synchronize: true,
+  };
 };
