@@ -14,6 +14,9 @@ export class UserOrmEntity {
   @Column({ length: 50 })
   nickName: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  fcmToken: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 
