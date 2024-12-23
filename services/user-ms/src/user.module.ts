@@ -2,9 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { UserController } from './presentation/user.controller';
 import { UserUsecase } from './domain/user.usecase';
-import { AuthGateway } from './infrastructure/gateways/auth.gateway';
-import { KakaoAuthService } from './infrastructure/gateways/kakao-auth.service';
-import { KakaoAuthConfig } from './infrastructure/gateways/kakao-auth.config';
 import { NotificationGateway } from './infrastructure/gateways/notification.gateway';
 import { TokenService } from './infrastructure/services/token.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -18,7 +15,6 @@ import { FriendshipRepository } from './infrastructure/repositories/friendship.r
 import { FriendshipDao } from './infrastructure/repositories/dao/friendship.dao';
 import { HttpModule } from '@nestjs/axios';
 import { FriendshipOrmEntity } from './infrastructure/repositories/dao/friendship.orm-entity';
-import { AppleAuthService } from './infrastructure/gateways/apple-auth.service';
 
 @Module({
   imports: [
@@ -39,11 +35,7 @@ import { AppleAuthService } from './infrastructure/gateways/apple-auth.service';
     RefreshTokenDao,
     UserRepository,
     UserUsecase,
-    AuthGateway,
-    KakaoAuthService,
-    AppleAuthService,
     TokenService,
-    KakaoAuthConfig,
     NotificationGateway,
     FriendshipDao,
     FriendshipRepository,
