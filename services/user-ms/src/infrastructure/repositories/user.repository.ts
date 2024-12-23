@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Provider, UserEntity } from '../../domain/user.entity';
+import { UserEntity } from '../../domain/user.entity';
 import { UserDao } from './dao/user.dao';
 import { RefreshTokenDao } from './dao/refresh-token.dao';
 import { UserOrmEntity } from './dao/user.orm-entity';
@@ -18,29 +18,39 @@ export class UserRepository {
     const userOrm = new UserOrmEntity();
     userOrm.uuid = userEntity.getUuid();
     userOrm.socialId = userEntity.getSocialId();
-    userOrm.provider = userEntity.getProvider();
     userOrm.nickName = userEntity.getNickName();
-    // createdAt, updatedAt은 TypeORM @CreateDateColumn / @UpdateDateColumn이 자동 처리
+
+    // 추가
+    userOrm.fcmToken = userEntity.getFcmToken() || null;
 
     await this.userDao.createOrUpdateUser(userOrm);
   }
 
-  /**
-   * 유저 정보 로드
-   */
   async findUserByUuid(uuid: string): Promise<UserEntity | null> {
     const userOrm = await this.userDao.findUserByUuid(uuid);
     if (!userOrm) return null;
+    return this.ormEntityToDomain(userOrm);
+  }
 
-    // MySQL -> Domain Entity 변환
+  async findUserByNickname(nickname: string): Promise<UserEntity | null> {
+    const userOrm = await this.userDao.findUserByNickname(nickname);
+    if (!userOrm) return null;
+    return this.ormEntityToDomain(userOrm);
+  }
+
+  private ormEntityToDomain(userOrm: UserOrmEntity): UserEntity {
     return new UserEntity({
       uuid: userOrm.uuid,
       socialId: userOrm.socialId,
-      provider: userOrm.provider as Provider,
       nickName: userOrm.nickName,
+      fcmToken: userOrm.fcmToken || undefined,
       createdAt: userOrm.createdAt,
       updatedAt: userOrm.updatedAt,
     });
+  }
+
+  async updateNickname(userUuid: string, newNickname: string): Promise<void> {
+    await this.userDao.updateNicknameByUuid(userUuid, newNickname);
   }
 
   /**
@@ -59,5 +69,9 @@ export class UserRepository {
 
   async deleteRefreshToken(userUuid: string): Promise<void> {
     return this.refreshTokenDao.deleteRefreshToken(userUuid);
+  }
+
+  async deleteUser(userUuid: string): Promise<void> {
+    await this.userDao.deleteUserByUuid(userUuid);
   }
 }
