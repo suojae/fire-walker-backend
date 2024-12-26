@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('users')
 export class UserOrmEntity {
@@ -13,6 +19,9 @@ export class UserOrmEntity {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   fcmToken: string | null;
+
+  @Column({ type: 'int', default: 0 })
+  dailyTargetStep: number;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -5,6 +5,7 @@ export interface UserEntityProps {
   socialId: string;
   nickName: string;
   fcmToken?: string;
+  dailyTargetStep: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -14,6 +15,7 @@ export class UserEntity {
   private readonly socialId: string;
   private nickName: string;
   private fcmToken?: string;
+  private dailyTargetStep: number;
   private createdAt: Date;
   private updatedAt: Date;
 
@@ -21,6 +23,7 @@ export class UserEntity {
     this.uuid = props.uuid;
     this.socialId = props.socialId;
     this.nickName = props.nickName;
+    this.dailyTargetStep = props.dailyTargetStep;
     this.fcmToken = props.fcmToken;
     this.createdAt = props.createdAt || new Date();
     this.updatedAt = props.updatedAt || new Date();
@@ -30,6 +33,19 @@ export class UserEntity {
     return plainToInstance(UserEntity, data);
   }
 
+
+  getDailyTargetStep(): number {
+    return this.dailyTargetStep;
+  }
+
+  setDailyTargetStep(step: number): this {
+    if (step < 0) {
+      throw new Error('Daily target step must be a positive number.');
+    }
+    this.dailyTargetStep = step;
+    this.updateTimestamp();
+    return this;
+  }
   // Getter / Setter
   getUuid(): string {
     return this.uuid;

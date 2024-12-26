@@ -16,19 +16,14 @@ import {
   FriendAcceptNotificationRequestDto,
   FriendAcceptNotificationResponseDto,
 } from './dto/friend-accept-notification-request.dto';
-import {
-  UpdateNicknameRequestDto,
-  UpdateNicknameResponseDto,
-} from './dto/update-nickname.dto';
+
+import { UpdateUserInfoRequestDto, UpdateUserInfoResponseDto } from './dto/update-user-info.dto';
 
 @ApiTags('auth')
 @Controller('auth')
 export class UserController {
   constructor(private readonly userUsecase: UserUsecase) {}
 
-  /**
-   * 회원가입
-   */
   @Post('signup')
   @ApiOperation({ summary: '회원가입' })
   @ApiResponse({
@@ -46,14 +41,13 @@ export class UserController {
     },
     type: SignUpResponseDto,
   })
-  async signUpWithKakao(
+  async signUp(
     @Body() signUpRequestDto: SignUpRequestDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<SignUpResponseDto> {
-    const tokenEntity = await this.userUsecase.signUp(
-      signUpRequestDto.socialId,
-    );
+    const tokenEntity = await this.userUsecase.signUp(signUpRequestDto.socialId);
 
+    // 헤더에 JWT 추가
     res.setHeader('Authorization', `Bearer ${tokenEntity.getAccessToken()}`);
     res.setHeader('X-Refresh-Token', tokenEntity.getRefreshToken());
 
@@ -61,7 +55,7 @@ export class UserController {
   }
 
   /**
-   * Access Token 검증 (간단한 SignIn 예시)
+   * Access Token 검증
    */
   @Post('signin')
   @ApiOperation({ summary: 'Access Token 검증' })
@@ -162,19 +156,7 @@ export class UserController {
   }
 
   /**
-   * [9] FCM 토큰 업데이트
-   */
-  @Put('fcm-token')
-  @ApiOperation({ summary: '유저 FCM 토큰 업데이트' })
-  @ApiResponse({ status: 200, description: '성공' })
-  async updateFcmToken(@Body() body: { userUuid: string; fcmToken: string }) {
-    const { userUuid, fcmToken } = body;
-    await this.userUsecase.updateFcmToken(userUuid, fcmToken);
-    return { message: 'FCM 토큰이 업데이트되었습니다.' };
-  }
-
-  /**
-   * [10] 친구 요청 알림 전송
+   * 친구 요청 알림 전송
    */
   @Post('friend/request')
   @ApiOperation({ summary: '친구 요청 알림 전송' })
@@ -214,30 +196,30 @@ export class UserController {
   }
 
   /**
-   * 친구 목록 조회 (닉네임 기반)
+   * 친구 목록 조회
    */
-  @Get('friend/list/:nickname')
+  @Get('friend/list')
   @ApiOperation({ summary: '친구 목록 조회' })
-  async getFriendList(@Param('nickname') nickname: string) {
-    const friendUuids = await this.userUsecase.findMyFriends(nickname);
+  async getFriendList(@Param('userId') userId: string) {
+    const friendUuids = await this.userUsecase.findMyFriends(userId);
     return { friendUuids };
   }
 
   /**
-   * 유저 닉네임 업데이트
+   * 유저 정보 업데이트
    */
-  @Put('nickname')
-  @ApiOperation({ summary: '유저 닉네임 업데이트' })
+  @Put('update')
+  @ApiOperation({ summary: '유저 정보 업데이트' })
   @ApiResponse({
     status: 201,
-    description: '닉네임 업데이트 성공',
-    type: UpdateNicknameResponseDto,
+    description: '유저 정보 업데이트 성공',
+    type: UpdateUserInfoResponseDto,
   })
-  async updateNickname(
-    @Body() body: UpdateNicknameRequestDto,
-  ): Promise<UpdateNicknameResponseDto> {
-    const { userUuid, newNickname } = body;
-    await this.userUsecase.updateNickname(userUuid, newNickname);
-    return { message: '닉네임이 업데이트되었습니다.' };
+  async updateUserInfo(
+    @Body() body: UpdateUserInfoRequestDto,
+  ): Promise<UpdateUserInfoResponseDto> {
+    const { userUuid, nickName, fcmToken } = body;
+    await this.userUsecase.updateUserInfo(userUuid, { nickName, fcmToken });
+    return { message: '유저 정보가 업데이트되었습니다.' };
   }
 }

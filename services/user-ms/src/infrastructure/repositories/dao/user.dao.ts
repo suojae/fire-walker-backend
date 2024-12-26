@@ -10,8 +10,11 @@ export class UserDao {
     private readonly userRepository: Repository<UserOrmEntity>,
   ) {}
 
-  async updateNicknameByUuid(uuid: string, newNickname: string): Promise<void> {
-    await this.userRepository.update({ uuid }, { nickName: newNickname });
+  async updateUserByUuid(uuid: string, updateData: Partial<UserOrmEntity>): Promise<void> {
+    if (!uuid) {
+      throw new Error('UUID is required to update user information.');
+    }
+    await this.userRepository.update({ uuid }, updateData);
   }
 
   async createOrUpdateUser(user: UserOrmEntity): Promise<UserOrmEntity> {
@@ -22,9 +25,9 @@ export class UserDao {
     return this.userRepository.findOneBy({ uuid });
   }
 
-  async findUserByNickname(nickName: string): Promise<UserOrmEntity | null> {
+  async findUserByNickname(nickname: string): Promise<UserOrmEntity | null> {
     return this.userRepository.findOne({
-      where: { nickName },
+      where: { nickName: nickname },
     });
   }
 

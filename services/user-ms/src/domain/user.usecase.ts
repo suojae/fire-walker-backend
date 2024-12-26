@@ -11,6 +11,7 @@ import { FriendshipRepository } from '../infrastructure/repositories/friendship.
 import { TokenEntity } from './token.entity';
 import { UserEntity } from './user.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { UserOrmEntity } from '../infrastructure/repositories/dao/user.orm-entity';
 
 @Injectable()
 export class UserUsecase {
@@ -30,6 +31,7 @@ export class UserUsecase {
     const user = new UserEntity({
       uuid: userUuid,
       socialId: socialId,
+      dailyTargetStep: 0,
       nickName: '',
     });
 
@@ -172,33 +174,47 @@ export class UserUsecase {
     return this.sendFriendAcceptNotification(recipientNickname, tokens);
   }
 
-  async findMyFriends(userNickname: string): Promise<string[]> {
-    const user = await this.userRepository.findUserByNickname(userNickname);
-    if (!user) {
-      throw new NotFoundException(
-        `User not found by nickname: ${userNickname}`,
-      );
-    }
-    const userUuid = user.getUuid();
-    const rows = await this.friendshipRepository.findAllFriendships(userUuid);
+  async findMyFriends(userId: string): Promise<string[]> {
+    const rows = await this.friendshipRepository.findAllFriendships(userId);
     const acceptedRows = rows.filter((r) => r.status === 'ACCEPTED');
     return acceptedRows.map((r) =>
-      r.userUuid === userUuid ? r.friendUuid : r.userUuid,
+      r.userUuid === userId ? r.friendUuid : r.userUuid,
     );
   }
 
   // ----------------------------------------------------------------
-  // [유저 닉네임 업데이트]
+  // [유저 정보 업데이트]
   // ----------------------------------------------------------------
-  async updateNickname(userUuid: string, newNickname: string): Promise<void> {
+  async updateUserInfo(
+    userUuid: string,
+    updateData: Partial<{ nickName: string; fcmToken: string; dailyTargetStep: number }>, // 필드 추가
+  ): Promise<void> {
     const user = await this.userRepository.findUserByUuid(userUuid);
     if (!user) {
       throw new NotFoundException(`User not found: ${userUuid}`);
     }
 
-    // 닉네임 업데이트
-    await this.userRepository.updateNickname(userUuid, newNickname);
+    const updatePayload: Partial<UserOrmEntity> = {};
+
+    // 업데이트 데이터 적용
+    if (updateData.nickName) {
+      updatePayload.nickName = updateData.nickName;
+    }
+    if (updateData.fcmToken) {
+      updatePayload.fcmToken = updateData.fcmToken;
+    }
+    if (updateData.dailyTargetStep !== undefined) {
+      updatePayload.dailyTargetStep = updateData.dailyTargetStep;
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      throw new Error('No valid update data provided.');
+    }
+
+    // 업데이트 메서드 호출
+    await this.userRepository.updateUserInfo(userUuid, updatePayload);
   }
+
 
   // ----------------------------------------------------------------
   // [Private Helper]

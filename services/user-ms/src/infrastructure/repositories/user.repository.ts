@@ -12,16 +12,18 @@ export class UserRepository {
   ) {}
 
   /**
-   * 유저 정보를 MySQL에 저장
+   * 유저 정보를 MySQL에 저장 (fcmToken 포함)
+   */
+  /**
+   * 유저 정보를 MySQL에 저장 (dailyTargetStep 포함)
    */
   async saveUser(userEntity: UserEntity): Promise<void> {
     const userOrm = new UserOrmEntity();
     userOrm.uuid = userEntity.getUuid();
     userOrm.socialId = userEntity.getSocialId();
     userOrm.nickName = userEntity.getNickName();
-
-    // 추가
     userOrm.fcmToken = userEntity.getFcmToken() || null;
+    userOrm.dailyTargetStep = userEntity.getDailyTargetStep();
 
     await this.userDao.createOrUpdateUser(userOrm);
   }
@@ -43,18 +45,26 @@ export class UserRepository {
       uuid: userOrm.uuid,
       socialId: userOrm.socialId,
       nickName: userOrm.nickName,
+      dailyTargetStep: userOrm.dailyTargetStep,
       fcmToken: userOrm.fcmToken || undefined,
       createdAt: userOrm.createdAt,
       updatedAt: userOrm.updatedAt,
     });
   }
 
-  async updateNickname(userUuid: string, newNickname: string): Promise<void> {
-    await this.userDao.updateNicknameByUuid(userUuid, newNickname);
+  async updateUserInfo(
+    userUuid: string,
+    updateData: Partial<UserOrmEntity>,
+  ): Promise<void> {
+    if (!updateData || Object.keys(updateData).length === 0) {
+      throw new Error('No data provided for update.');
+    }
+    await this.userDao.updateUserByUuid(userUuid, updateData);
   }
 
+
   /**
-   * Redis에 Refresh Token 저장 (RTR 시)
+   * Redis에 Refresh Token 저장
    */
   async saveRefreshToken(
     userUuid: string,

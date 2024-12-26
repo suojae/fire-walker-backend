@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class UpdateUserInfoRequestDto {
   @IsUUID()
@@ -8,6 +8,11 @@ export class UpdateUserInfoRequestDto {
   @IsString()
   @MaxLength(50)
   nickName?: string;
+
+  @IsOptional()
+  @IsNumber()
+  dailyTargetStep?: string;
+
 
   @IsOptional()
   @IsString()

@@ -2,11 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { UserModule } from './user.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
-dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(UserModule);
   console.log('User service is running...');
+  dotenv.config();
 
   const config = new DocumentBuilder()
     .setTitle('User-MS API')
@@ -17,7 +17,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
   await app.listen(3000);
 }
 bootstrap();

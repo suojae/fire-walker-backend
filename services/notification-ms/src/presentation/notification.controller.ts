@@ -24,9 +24,8 @@ export class NotificationController {
   async sendFriendRequestNotification(
     @Body() dto: FriendRequestDto,
   ): Promise<FriendRequestResponseDto> {
-    this.logger.log(`Received friend request notification for recipient: ${dto.recipientUuid}`);
-    await this.notificationService.sendFriendRequestNotification(dto.recipientUuid, dto.senderNickname);
-
+    this.logger.log(`Received friend request notification. Tokens: ${JSON.stringify(dto.tokens)}`);
+    await this.notificationService.sendFriendRequestNotification(dto.tokens, dto.senderNickname);
     return { message: 'Friend request notification sent.' };
   }
 
@@ -39,9 +38,8 @@ export class NotificationController {
   async sendFriendAcceptNotification(
     @Body() dto: FriendAcceptDto,
   ): Promise<FriendAcceptResponseDto> {
-    this.logger.log(`Received friend accept notification for requester: ${dto.requesterUuid}`);
-    await this.notificationService.sendFriendAcceptNotification(dto.requesterUuid, dto.recipientNickname);
-
+    this.logger.log(`Received friend accept notification. Tokens: ${JSON.stringify(dto.tokens)}`);
+    await this.notificationService.sendFriendAcceptNotification(dto.tokens, dto.recipientNickname);
     return { message: 'Friend accept notification sent.' };
   }
 }

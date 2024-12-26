@@ -1,25 +1,14 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { AwsParameterStoreService } from './aws-parameter-store.service';
 import { UserOrmEntity } from '../dao/user.orm-entity';
 import { FriendshipOrmEntity } from '../dao/friendship.orm-entity';
 
-export const typeOrmConfig = async (
-  awsService: AwsParameterStoreService,
-): Promise<TypeOrmModuleOptions> => {
-  const host = await awsService.getParameter('/userms/mysql/host');
-  const port = parseInt(await awsService.getParameter('/userms/mysql/port'), 10);
-  const username = await awsService.getParameter('/userms/mysql/username');
-  const password = await awsService.getParameter('/userms/mysql/password');
-  const database = await awsService.getParameter('/userms/mysql/database');
-
-  return {
-    type: 'mysql',
-    host,
-    port,
-    username,
-    password,
-    database,
-    entities: [UserOrmEntity, FriendshipOrmEntity],
-    synchronize: true,
-  };
+export const typeOrmConfig: TypeOrmModuleOptions = {
+  type: 'mysql',
+  host: 'localhost', // 로컬 MySQL 컨테이너 호스트
+  port: 3306,        // 로컬 MySQL 포트
+  username: 'root',  // MySQL 유저네임
+  password: 'password', // MySQL 비밀번호
+  database: 'test_db',   // MySQL 데이터베이스 이름
+  entities: [UserOrmEntity, FriendshipOrmEntity],
+  synchronize: true,     // 개발 환경에서만 사용 (운영 환경에서는 false)
 };

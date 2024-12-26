@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
-import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
-import { NotificationModule } from './presentation/notification.module';
+import { HttpModule } from '@nestjs/axios';
+import { FcmGateway } from './infrastructure/fcm.gateway';
+import { NotificationController } from './presentation/notification.controller';
+import { NotificationService } from './domain/notification.service';
 
 @Module({
   imports: [
@@ -9,7 +11,8 @@ import { NotificationModule } from './presentation/notification.module';
       isGlobal: true,
     }),
     HttpModule,
-    NotificationModule,
   ],
+  controllers: [NotificationController],
+  providers: [FcmGateway, NotificationService],
 })
 export class AppModule {}
