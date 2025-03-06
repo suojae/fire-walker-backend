@@ -40,8 +40,8 @@ Firewalker 백엔드는 **사용자 관리, 걸음 데이터 처리, 알림 시�
 **1. Step-Tracker-MS를 따로 둔 이유**
 - 걸음 데이터 API는 **I/O + CPU** 부담이 크다고 판단했습니다. 만약 트래픽이 몰리면 병목현상이 일어날 서비스는 Step-Tracker를 따로 분리하여 EC2에 배포했습니다.
 
-**2. gRPC vs Socket
-- 
+**2. gRPC vs Socket**
+- ㅇㅂㅈㅇㅂㅈ
 
 
 **3. Redis와 MySQL을 함께 사용하는 이유?**  
