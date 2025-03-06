@@ -32,17 +32,16 @@ Firewalker 백엔드는 **사용자 관리, 걸음 데이터 처리, 알림 시�
 ### 주요 설계 
 
 ✅ **User-MS / Step-Tracker-MS / Notification-MS** 로 역할을 분리  
-✅ **REST + gRPC 혼합 통신**  
-✅ **Redis + MySQL 혼합 사용**  
+✅ **네트워크: REST + gRPC**  
+✅ **데이터베이스: Redis + MySQL**  
 
 <br/>
 
 **1. Step-Tracker-MS를 따로 둔 이유**
-   - 걸음 데이터 API는 **I/O + CPU** 부담이 크다고 판단했습니다. 만약 트래픽이 몰리면 병목현상이 일어날 서비스는 Step-Tracker를 따로 분리하여 EC2에 배포했습니다.
+- 걸음 데이터 API는 **I/O + CPU** 부담이 크다고 판단했습니다. 만약 트래픽이 몰리면 병목현상이 일어날 서비스는 Step-Tracker를 따로 분리하여 EC2에 배포했습니다.
 
 **2. gRPC vs Socket
-- wj
-
+- 
 
 
 **3. Redis와 MySQL을 함께 사용하는 이유?**  
@@ -63,15 +62,15 @@ Firewalker 백엔드는 **사용자 관리, 걸음 데이터 처리, 알림 시�
 
 <img width="400" alt="image" src="https://github.com/user-attachments/assets/4b22ad00-79d6-4090-b7d0-48beaac1716c" />
 
-1️⃣ **Auto Scaling이 적용된 서비스는?**  
+**1. Auto Scaling이 적용된 서비스는?**  
    - **User-MS & Step-Tracker-MS**는 트래픽 변동이 크므로 **Auto Scaling** 적용.  
    - **Notification-MS**는 비동기 이벤트 기반이므로 초기에 고정된 리소스로 운영 후 스케일 조정 가능.  
 
-2️⃣ **왜 MySQL을 Multi-AZ + Read Replica로 운영하는가?**  
+**2. 왜 MySQL을 Multi-AZ + Read Replica로 운영하는가?**  
    - **Multi-AZ**: 장애 시 자동 페일오버.  
    - **Read Replica**: 걸음 데이터 조회 부하를 분산하여 성능 최적화.  
 
-3️⃣ **왜 Redis를 선택했는가?**  
+**3. 왜 Redis를 선택했는가?**  
    - 랭킹 시스템은 **높은 읽기 부하**가 발생하므로 Redis를 활용해 캐싱.  
 
 
